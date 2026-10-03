@@ -21,17 +21,17 @@ val envProps = Properties()
 if (envFile.exists()) envFile.inputStream().use { envProps.load(it) }
 // The phone reaches the desktop backend directly over WireGuard, never through nginx.
 val apiBaseUrl = envProps.getProperty("API_BASE_URL", "http://10.7.0.2:3171/")
-// Bearer token for the backend (WHEREAMI_API_TOKEN in /etc/automatelinux/whereami.env).
+// Bearer token for the backend (SHCHUNA_API_TOKEN in /etc/automatelinux/shchuna.env).
 // Parking spends money, so a build without it must not ship: fail the build instead.
 val apiToken = envProps.getProperty("API_TOKEN")
-    ?: throw GradleException("mobile/.env has no API_TOKEN — copy WHEREAMI_API_TOKEN from /etc/automatelinux/whereami.env")
+    ?: throw GradleException("mobile/.env has no API_TOKEN — copy SHCHUNA_API_TOKEN from /etc/automatelinux/shchuna.env")
 
 android {
-    namespace = "com.automatelinux.whereAmI"
+    namespace = "com.automatelinux.shchuna"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.automatelinux.whereAmI"
+        applicationId = "com.automatelinux.shchuna"
         minSdk = 26
         targetSdk = 35
         versionCode = gitCommitCount

@@ -1,4 +1,4 @@
-package com.automatelinux.whereAmI.ui
+package com.automatelinux.shchuna.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -83,13 +83,13 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.automatelinux.whereAmI.data.model.Cello
-import com.automatelinux.whereAmI.data.model.Locality
-import com.automatelinux.whereAmI.data.model.ParkingSession
-import com.automatelinux.whereAmI.data.model.StreetMatch
-import com.automatelinux.whereAmI.data.model.Where
-import com.automatelinux.whereAmI.data.model.Zone
-import com.automatelinux.whereAmI.ui.theme.Palette
+import com.automatelinux.shchuna.data.model.Cello
+import com.automatelinux.shchuna.data.model.Locality
+import com.automatelinux.shchuna.data.model.ParkingSession
+import com.automatelinux.shchuna.data.model.StreetMatch
+import com.automatelinux.shchuna.data.model.Where
+import com.automatelinux.shchuna.data.model.Zone
+import com.automatelinux.shchuna.ui.theme.Palette
 import kotlinx.coroutines.delay
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime

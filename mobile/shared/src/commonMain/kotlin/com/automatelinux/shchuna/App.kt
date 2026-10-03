@@ -1,10 +1,10 @@
-package com.automatelinux.whereAmI
+package com.automatelinux.shchuna
 
 import androidx.compose.runtime.Composable
-import com.automatelinux.whereAmI.ui.Actions
-import com.automatelinux.whereAmI.ui.ScreenState
-import com.automatelinux.whereAmI.ui.WhereScreen
-import com.automatelinux.whereAmI.ui.theme.AppTheme
+import com.automatelinux.shchuna.ui.Actions
+import com.automatelinux.shchuna.ui.ScreenState
+import com.automatelinux.shchuna.ui.WhereScreen
+import com.automatelinux.shchuna.ui.theme.AppTheme
 
 // Shared entry composable — rendered by MainActivity on Android and (on a Mac)
 // by ComposeUIViewController on iOS. The platform supplies state and actions.

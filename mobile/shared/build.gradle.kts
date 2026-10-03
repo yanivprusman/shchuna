@@ -36,7 +36,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.automatelinux.whereAmI.shared"
+    namespace = "com.automatelinux.shchuna.shared"
     compileSdk = 35
     defaultConfig {
         minSdk = 26
@@ -50,5 +50,5 @@ android {
 // Bundled typeface (Rubik, OFL) lives in commonMain/composeResources/font.
 compose.resources {
     publicResClass = false
-    packageOfResClass = "com.automatelinux.whereAmI.resources"
+    packageOfResClass = "com.automatelinux.shchuna.resources"
 }

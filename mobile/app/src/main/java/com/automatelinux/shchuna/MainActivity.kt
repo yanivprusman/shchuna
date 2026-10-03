@@ -1,4 +1,4 @@
-package com.automatelinux.whereAmI
+package com.automatelinux.shchuna
 
 import android.Manifest
 import android.os.Bundle
@@ -11,7 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.automatelinux.whereAmI.ui.Actions
+import com.automatelinux.shchuna.ui.Actions
 
 // Thin Android launcher — the UI is the shared commonMain App() composable.
 class MainActivity : ComponentActivity() {

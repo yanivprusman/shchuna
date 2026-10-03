@@ -21,6 +21,6 @@ dependencyResolutionManagement {
 
 includeBuild("build-logic")
 
-rootProject.name = "whereAmI"
+rootProject.name = "shchuna"
 include(":shared")
 include(":app")

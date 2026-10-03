@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { config } from "./config";
 
 /**
- * Every whereAmI route needs the bearer token. The parking routes spend real
+ * Every shchuna route needs the bearer token. The parking routes spend real
  * money on the owner's Cello account, and the server also listens on the LAN.
  */
 export function authorize(request: Request): Response | null {

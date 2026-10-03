@@ -1,16 +1,16 @@
-package com.automatelinux.whereAmI
+package com.automatelinux.shchuna
 
 import android.app.Application
 import android.location.Location
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.automatelinux.whereAmI.data.ApiException
-import com.automatelinux.whereAmI.data.StartOutcome
-import com.automatelinux.whereAmI.data.WhereApi
-import com.automatelinux.whereAmI.data.model.Where
-import com.automatelinux.whereAmI.location.LocationSource
-import com.automatelinux.whereAmI.ui.Confirmation
-import com.automatelinux.whereAmI.ui.ScreenState
+import com.automatelinux.shchuna.data.ApiException
+import com.automatelinux.shchuna.data.StartOutcome
+import com.automatelinux.shchuna.data.WhereApi
+import com.automatelinux.shchuna.data.model.Where
+import com.automatelinux.shchuna.location.LocationSource
+import com.automatelinux.shchuna.ui.Confirmation
+import com.automatelinux.shchuna.ui.ScreenState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

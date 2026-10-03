@@ -6,12 +6,12 @@
 // Account/VerifyPhone (Cello texts a code), Account/Login with that code as
 // SecretCode. The code is read off the main phone's SMS inbox over adb, so the
 // owner does nothing. The new token and App-Key replace the old ones in
-// /etc/automatelinux/whereami.env; nothing else in the file changes.
+// /etc/automatelinux/shchuna.env; nothing else in the file changes.
 
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 
-const ENV = "/etc/automatelinux/whereami.env";
+const ENV = "/etc/automatelinux/shchuna.env";
 const BASE = "https://application.cellopark.co.il/smartphone-api/";
 const PHONE_ADB = "10.7.0.3:5555";
 // Hard-coded in the Cello app (AppConfigurationHelper.secretKey, v12.31).
@@ -21,7 +21,7 @@ const env = readFileSync(ENV, "utf8");
 const phone = env.match(/^CELLO_PHONE=(.+)$/m)?.[1].trim();
 if (!phone) throw new Error(`${ENV} has no CELLO_PHONE`);
 
-const base = { "Device-OS": "android", "Device-Name": "whereAmI", "Accept-Language": "he-IL", "OS-Version": "35", "App-Version": "12.31", SessionID: "whereami" };
+const base = { "Device-OS": "android", "Device-Name": "shchuna", "Accept-Language": "he-IL", "OS-Version": "35", "App-Version": "12.31", SessionID: "shchuna" };
 
 async function cello(path, { method = "GET", body, appKey } = {}) {
   const r = await fetch(BASE + path, {

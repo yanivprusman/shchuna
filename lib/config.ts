@@ -1,9 +1,9 @@
 import fs from "node:fs";
 
-// Secrets live in /etc/automatelinux/whereami.env (mode 600), read at request
+// Secrets live in /etc/automatelinux/shchuna.env (mode 600), read at request
 // time. Not process.env: Next inlines process.env.* at build time, so a value set
 // in a unit or .env.local can silently never reach a route (veggieBox hit this).
-const CONFIG_FILE = "/etc/automatelinux/whereami.env";
+const CONFIG_FILE = "/etc/automatelinux/shchuna.env";
 
 export type Config = {
   celloToken: string;
@@ -33,8 +33,8 @@ export function config(): Config {
     if (!v) throw new Error(`${CONFIG_FILE} has no ${key}`);
     return v;
   };
-  const apiToken = need("WHEREAMI_API_TOKEN");
-  if (apiToken.length < 32) throw new Error(`WHEREAMI_API_TOKEN in ${CONFIG_FILE} is shorter than 32 characters`);
+  const apiToken = need("SHCHUNA_API_TOKEN");
+  if (apiToken.length < 32) throw new Error(`SHCHUNA_API_TOKEN in ${CONFIG_FILE} is shorter than 32 characters`);
 
   const result: Config = {
     celloToken: need("CELLO_TOKEN"),

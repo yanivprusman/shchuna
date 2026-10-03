@@ -5,7 +5,7 @@
 import { reverseGeocodeDetailed, type AddressBreakdown } from "@automatelinux/geo";
 import { norm, type Spot } from "./zones";
 
-const USER_AGENT = "automateLinux-whereAmI/0.1 (yanivprusman@gmail.com)";
+const USER_AGENT = "automateLinux-shchuna/0.1 (yanivprusman@gmail.com)";
 
 export type OsmAreas = {
   /** null when Overpass could not be asked — said so to the user, never read as "no". */

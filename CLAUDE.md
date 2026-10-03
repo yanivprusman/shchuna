@@ -1,4 +1,4 @@
-# whereAmI — שכונה (launcher name)
+# shchuna — שכונה
 
 **A neighbourhood app first.** Which neighbourhood you are in (the headline), or —
 type a street — which neighbourhoods that street runs through; plus street, city,
@@ -30,8 +30,8 @@ Ben (voice / WhatsApp)  ──▶  scripts/parking.mjs  ──▶  same API, loc
 - **Cello API** was read out of the Android app (v12.31); `lib/cello.ts` documents
   each call. Login is phone + SMS code; `npm run cello:login` redoes it and reads
   the code off the phone over adb.
-- **Secrets**: `/etc/automatelinux/whereami.env` (600) — Cello token + App-Key and
-  `WHEREAMI_API_TOKEN`. Read per request, not from `process.env` (Next inlines it).
+- **Secrets**: `/etc/automatelinux/shchuna.env` (600) — Cello token + App-Key and
+  `SHCHUNA_API_TOKEN`. Read per request, not from `process.env` (Next inlines it).
   The phone app bakes the token from gitignored `mobile/.env`; the build fails
   without it. Starting parking spends money — the API is never open.
 - Overpass (OSM "is it industrial land") sheds load; an outage is reported as
@@ -40,11 +40,11 @@ Ben (voice / WhatsApp)  ──▶  scripts/parking.mjs  ──▶  same API, loc
 ## Run / test
 
 ```bash
-d startApp --app whereAmI               # dev on 3171
+d startApp --app shchuna               # dev on 3171
 npm test                                # zone-choice cases from real Cello names
 node scripts/parking.mjs where          # nothing paid
 cd mobile && ./gradlew assembleDevDebug # desktop only, never the NUC
-/opt/automateLinux/utilities/chunked-adb-install.sh mobile/app/build/outputs/apk/dev/debug/app-dev-debug.apk 10.7.0.3:5555 com.automatelinux.whereAmI.dev
+/opt/automateLinux/utilities/chunked-adb-install.sh mobile/app/build/outputs/apk/dev/debug/app-dev-debug.apk 10.7.0.3:5555 com.automatelinux.shchuna.dev
 ```
 
 Ben's instructions for parking live in `/root/.openclaw/workspace/TOOLS.md`.

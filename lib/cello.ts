@@ -5,7 +5,7 @@
 // fails with the server's own message rather than guessing.
 //
 //   auth   "Authorization: Basic <AuthorizationToken>" from Account/Login, plus the
-//          App-Key that App/RegisterApp hands out. Both live in whereami.env.
+//          App-Key that App/RegisterApp hands out. Both live in shchuna.env.
 //   zones  Location/GetLocations — ~100 cities, ~360 zones. A zone is a NAME and
 //          nothing else: GeoLocation is null on every one, and the app's own
 //          Location/GetLocationsByGeoLocation answers 404 everywhere. Choosing the
@@ -45,13 +45,13 @@ function headers(): Record<string, string> {
   const c = config();
   return {
     "Device-OS": "android",
-    "Device-Name": "whereAmI",
+    "Device-Name": "shchuna",
     "Accept-Language": "he-IL",
     "OS-Version": "35",
     "App-Version": "12.31",
     "App-Key": c.celloAppKey,
     // The app sends one SessionID per launch; the server only needs it present.
-    SessionID: "whereami",
+    SessionID: "shchuna",
     Authorization: `Basic ${c.celloToken}`,
   };
 }

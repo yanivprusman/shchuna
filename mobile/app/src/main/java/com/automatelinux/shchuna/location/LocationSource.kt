@@ -1,4 +1,4 @@
-package com.automatelinux.whereAmI.location
+package com.automatelinux.shchuna.location
 
 import android.Manifest
 import android.annotation.SuppressLint

@@ -24,9 +24,9 @@ const API = "http://127.0.0.1:3171";
 const MAX_FIX_AGE_S = 300;
 
 function token() {
-  const line = readFileSync("/etc/automatelinux/whereami.env", "utf8").split("\n").find((l) => l.startsWith("WHEREAMI_API_TOKEN="));
-  if (!line) throw new Error("WHEREAMI_API_TOKEN missing from /etc/automatelinux/whereami.env");
-  return line.slice("WHEREAMI_API_TOKEN=".length).trim();
+  const line = readFileSync("/etc/automatelinux/shchuna.env", "utf8").split("\n").find((l) => l.startsWith("SHCHUNA_API_TOKEN="));
+  if (!line) throw new Error("SHCHUNA_API_TOKEN missing from /etc/automatelinux/shchuna.env");
+  return line.slice("SHCHUNA_API_TOKEN=".length).trim();
 }
 
 /** "+3d5h8m5s607ms" → seconds. */

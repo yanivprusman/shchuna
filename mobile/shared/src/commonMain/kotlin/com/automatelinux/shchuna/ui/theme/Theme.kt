@@ -1,4 +1,4 @@
-package com.automatelinux.whereAmI.ui.theme
+package com.automatelinux.shchuna.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
@@ -8,11 +8,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import com.automatelinux.whereAmI.resources.Res
-import com.automatelinux.whereAmI.resources.rubik_black
-import com.automatelinux.whereAmI.resources.rubik_bold
-import com.automatelinux.whereAmI.resources.rubik_medium
-import com.automatelinux.whereAmI.resources.rubik_regular
+import com.automatelinux.shchuna.resources.Res
+import com.automatelinux.shchuna.resources.rubik_black
+import com.automatelinux.shchuna.resources.rubik_bold
+import com.automatelinux.shchuna.resources.rubik_medium
+import com.automatelinux.shchuna.resources.rubik_regular
 import org.jetbrains.compose.resources.Font
 
 /**

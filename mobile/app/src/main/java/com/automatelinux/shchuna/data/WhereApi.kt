@@ -1,15 +1,15 @@
-package com.automatelinux.whereAmI.data
+package com.automatelinux.shchuna.data
 
-import com.automatelinux.whereAmI.BuildConfig
-import com.automatelinux.whereAmI.data.model.Address
-import com.automatelinux.whereAmI.data.model.AgeBand
-import com.automatelinux.whereAmI.data.model.Cello
-import com.automatelinux.whereAmI.data.model.Locality
-import com.automatelinux.whereAmI.data.model.ParkingSession
-import com.automatelinux.whereAmI.data.model.StreetMatch
-import com.automatelinux.whereAmI.data.model.StreetPlace
-import com.automatelinux.whereAmI.data.model.Where
-import com.automatelinux.whereAmI.data.model.Zone
+import com.automatelinux.shchuna.BuildConfig
+import com.automatelinux.shchuna.data.model.Address
+import com.automatelinux.shchuna.data.model.AgeBand
+import com.automatelinux.shchuna.data.model.Cello
+import com.automatelinux.shchuna.data.model.Locality
+import com.automatelinux.shchuna.data.model.ParkingSession
+import com.automatelinux.shchuna.data.model.StreetMatch
+import com.automatelinux.shchuna.data.model.StreetPlace
+import com.automatelinux.shchuna.data.model.Where
+import com.automatelinux.shchuna.data.model.Zone
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -28,7 +28,7 @@ sealed interface StartOutcome {
 }
 
 /**
- * The whereAmI backend (Next.js on the desktop, reached directly over WireGuard).
+ * The shchuna backend (Next.js on the desktop, reached directly over WireGuard).
  * Plain HttpURLConnection + org.json: four calls do not need a client library.
  */
 class WhereApi(

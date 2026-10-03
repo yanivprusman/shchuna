@@ -1,4 +1,4 @@
-package com.automatelinux.whereAmI.data.model
+package com.automatelinux.shchuna.data.model
 
 /** One answer from GET /api/where — mirrors the backend's JSON (lib/where.ts). */
 data class Where(
