@@ -1,19 +1,21 @@
 {
-  "name": "tmp-create-whereami-1791042978",
+  "name": "whereami",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --test 'test/*.test.ts'"
   },
   "dependencies": {
     "@addnewfeature/feedback-lib-launcher": "file:../../automateLinux/packages/feedback-lib-launcher",
     "@claudecontrol/feedback-lib": "file:../../automateLinux/packages/feedback-lib",
     "next": "16.3.8",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "@automatelinux/geo": "file:../../automateLinux/packages/geo"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

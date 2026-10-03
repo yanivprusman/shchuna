@@ -45,3 +45,9 @@ mobile/feedback-lib/
 mobile/build-logic/
 mobile/local.properties
 mobile/.env
+
+# local build config for the phone app (backend URL + API token)
+mobile/.env
+mobile/**/build/
+mobile/.gradle/
+mobile/local.properties
