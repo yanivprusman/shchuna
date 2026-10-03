@@ -74,6 +74,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -358,6 +360,12 @@ private fun SearchBar(state: ScreenState, actions: Actions) {
 @Composable
 private fun SearchResults(state: ScreenState, actions: Actions) {
     val results = state.results
+    val focus = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    // Picking a place puts the keyboard away, or it covers the answer.
+    val open: (String, Double, Double) -> Unit = { label, lat, lon ->
+        keyboard?.hide(); focus.clearFocus(); actions.openPlace(label, lat, lon)
+    }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         if (results == null) return@Column
         if (results.isEmpty()) {
@@ -372,10 +380,10 @@ private fun SearchResults(state: ScreenState, actions: Actions) {
                 val named = m.neighborhoods.filter { it.name != null }
                 if (named.isEmpty()) {
                     Text("אין שכונה ממופה לרחוב הזה", fontSize = 13.sp, color = Palette.Muted)
-                    PlaceChip("פתח", "open-street") { actions.openPlace(m.label, m.lat, m.lon) }
+                    PlaceChip("פתח", "open-street") { open(m.label, m.lat, m.lon) }
                 } else {
                     Text(if (named.size == 1) "בשכונה" else "עובר ב-${named.size} שכונות", fontSize = 13.sp, color = Palette.Muted)
-                    FlowChips(named.map { it.name!! to { actions.openPlace("${m.label} · ${it.name}", it.lat, it.lon) } })
+                    FlowChips(named.map { it.name!! to { open("${m.label} · ${it.name}", it.lat, it.lon) } })
                 }
             }
         }
