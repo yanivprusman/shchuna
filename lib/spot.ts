@@ -73,6 +73,17 @@ export async function telAvivParkingArea(lat: number, lon: number): Promise<numb
   return body.features?.[0]?.attributes.ms_ezor ?? null;
 }
 
+/**
+ * Two independent signs of an industrial area: OSM landuse=industrial around the
+ * point, or the address itself naming one ("אזור תעשייה ג'"). Either is enough;
+ * unknown only when Overpass was unreachable AND the address says nothing.
+ */
+function industrialFrom(areas: OsmAreas, neighborhoods: string[]): boolean | null {
+  if (areas.industrial === true) return true;
+  if (neighborhoods.some((n) => /אזור(י)? ה?תעשי|איזור ה?תעשי|פארק תעשי|קרית תעשי|קריית תעשי/.test(n))) return true;
+  return areas.industrial;
+}
+
 export type SpotFacts = { address: AddressBreakdown; areas: OsmAreas; parkingArea: number | null; spot: Spot };
 
 export async function spotFacts(lat: number, lon: number): Promise<SpotFacts> {
@@ -87,6 +98,6 @@ export async function spotFacts(lat: number, lon: number): Promise<SpotFacts> {
     address,
     areas,
     parkingArea,
-    spot: { city: address.city, street: address.street, neighborhoods, parkingArea, industrial: areas.industrial },
+    spot: { city: address.city, street: address.street, neighborhoods, parkingArea, industrial: industrialFrom(areas, neighborhoods) },
   };
 }
