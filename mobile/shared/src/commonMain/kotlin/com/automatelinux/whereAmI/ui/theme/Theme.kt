@@ -16,15 +16,22 @@ import com.automatelinux.whereAmI.resources.rubik_regular
 import org.jetbrains.compose.resources.Font
 
 /**
- * Road-sign blue and kerb white. The palette is the Israeli street furniture the
- * app is about: the blue of a street-name plate and of a paid-parking kerb.
+ * Map colours: paper, the deep teal of map ink, and amber for "the neighbourhood
+ * you are in" — the same three as the icon. The parking card alone keeps the
+ * blue-and-white of an Israeli paid-parking kerb, because that card IS parking.
  */
 object Palette {
-    val Page = Color(0xFFF1F4F8)
+    val Page = Color(0xFFF7F4EE)
     val Card = Color(0xFFFFFFFF)
-    val Ink = Color(0xFF0F1B2D)
-    val Muted = Color(0xFF5C6B7E)
-    val Hairline = Color(0xFFE1E7EF)
+    val Ink = Color(0xFF14211F)
+    val Muted = Color(0xFF5E6B69)
+    val Hairline = Color(0xFFE6E0D4)
+    val Brand = Color(0xFF1E6B6B)
+    val BrandDeep = Color(0xFF0E3A40)
+    val BrandSoft = Color(0xFFE3EFEC)
+    val Highlight = Color(0xFFF2B544)
+    val Paper = Color(0xFFF6F1E6)
+    // Parking card only.
     val Sign = Color(0xFF1F55B4)
     val SignDeep = Color(0xFF0B2459)
     val SignSoft = Color(0xFFE8EFFB)
@@ -42,9 +49,9 @@ fun rubik(): FontFamily = FontFamily(
 )
 
 private val Colors = lightColorScheme(
-    primary = Palette.Sign,
+    primary = Palette.Brand,
     onPrimary = Color.White,
-    secondary = Palette.Kerb,
+    secondary = Palette.Highlight,
     background = Palette.Page,
     surface = Palette.Card,
     onSurface = Palette.Ink,

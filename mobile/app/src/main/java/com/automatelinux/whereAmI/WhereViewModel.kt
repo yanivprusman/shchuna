@@ -7,10 +7,12 @@ import androidx.lifecycle.viewModelScope
 import com.automatelinux.whereAmI.data.ApiException
 import com.automatelinux.whereAmI.data.StartOutcome
 import com.automatelinux.whereAmI.data.WhereApi
+import com.automatelinux.whereAmI.data.model.Where
 import com.automatelinux.whereAmI.location.LocationSource
 import com.automatelinux.whereAmI.ui.Confirmation
 import com.automatelinux.whereAmI.ui.ScreenState
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -28,6 +30,9 @@ class WhereViewModel(app: Application) : AndroidViewModel(app) {
     private var answeredFor: Location? = null
     private var tracking: Job? = null
     private var lookup: Job? = null
+    private var searchJob: Job? = null
+    /** The answer for where the phone is, kept while the user looks at another street. */
+    private var liveWhere: Where? = null
 
     /** Called on start and whenever permission may have changed. */
     fun start() {
@@ -48,6 +53,7 @@ class WhereViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun refresh() {
+        if (_state.value.browsing != null) { backToLive(); return }
         val fix = current
         if (fix == null) start() else lookUp(fix)
         refreshSessions()
@@ -60,7 +66,9 @@ class WhereViewModel(app: Application) : AndroidViewModel(app) {
             _state.update { it.copy(loading = true, error = null) }
             try {
                 val where = api.where(fix.latitude, fix.longitude)
-                _state.update { it.copy(where = where, loading = false) }
+                liveWhere = where
+                // While browsing another street, the live answer waits behind it.
+                _state.update { if (it.browsing == null) it.copy(where = where, loading = false) else it.copy(loading = false) }
             } catch (e: ApiException) {
                 answeredFor = null
                 _state.update { it.copy(loading = false, error = e.message) }
@@ -77,6 +85,48 @@ class WhereViewModel(app: Application) : AndroidViewModel(app) {
                 _state.update { it.copy(error = e.message) }
             }
         }
+    }
+
+    // ── Street search: "which neighbourhood is this street in?" ──
+
+    fun onQueryChange(query: String) {
+        _state.update { it.copy(query = query) }
+        searchJob?.cancel()
+        if (query.trim().length < 2) {
+            _state.update { it.copy(results = null, searching = false) }
+            return
+        }
+        searchJob = viewModelScope.launch {
+            delay(450) // wait for a pause in typing; Nominatim allows one request a second
+            _state.update { it.copy(searching = true) }
+            try {
+                val results = api.street(query.trim())
+                _state.update { it.copy(results = results, searching = false) }
+            } catch (e: ApiException) {
+                _state.update { it.copy(searching = false, results = emptyList(), error = e.message) }
+            }
+        }
+    }
+
+    /** Show everything about a picked place — its neighbourhood, the town, its Cello zone. */
+    fun openPlace(label: String, lat: Double, lon: Double) {
+        searchJob?.cancel()
+        lookup?.cancel()
+        lookup = viewModelScope.launch {
+            _state.update { it.copy(loading = true, error = null, results = null, searching = false, browsing = label, parkingMessage = null) }
+            try {
+                val where = api.where(lat, lon)
+                _state.update { it.copy(where = where, loading = false) }
+            } catch (e: ApiException) {
+                _state.update { it.copy(loading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun backToLive() {
+        searchJob?.cancel()
+        _state.update { it.copy(browsing = null, query = "", results = null, searching = false, where = liveWhere ?: it.where, parkingMessage = null) }
+        current?.let { if (liveWhere == null) lookUp(it) }
     }
 
     fun startParking(zoneId: Int, confirmationCode: String? = null) {

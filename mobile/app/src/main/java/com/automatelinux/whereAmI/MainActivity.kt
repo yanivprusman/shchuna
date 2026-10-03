@@ -35,6 +35,9 @@ class MainActivity : ComponentActivity() {
             confirmParking = viewModel::confirmParking,
             dismissConfirmation = viewModel::dismissConfirmation,
             stopParking = viewModel::stopParking,
+            search = viewModel::onQueryChange,
+            openPlace = viewModel::openPlace,
+            backToLive = viewModel::backToLive,
         )
         setContent {
             val state by viewModel.state.collectAsStateWithLifecycle()

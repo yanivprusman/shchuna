@@ -58,3 +58,14 @@ data class ParkingSession(
     val startedAt: String?,
     val amount: Double?,
 )
+
+/** A street (or address) from search, with the neighbourhoods it runs through. */
+data class StreetMatch(
+    val label: String,
+    val city: String?,
+    val neighborhoods: List<StreetPlace>,
+    val lat: Double,
+    val lon: Double,
+)
+
+data class StreetPlace(val name: String?, val lat: Double, val lon: Double)

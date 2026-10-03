@@ -6,6 +6,8 @@ import com.automatelinux.whereAmI.data.model.AgeBand
 import com.automatelinux.whereAmI.data.model.Cello
 import com.automatelinux.whereAmI.data.model.Locality
 import com.automatelinux.whereAmI.data.model.ParkingSession
+import com.automatelinux.whereAmI.data.model.StreetMatch
+import com.automatelinux.whereAmI.data.model.StreetPlace
 import com.automatelinux.whereAmI.data.model.Where
 import com.automatelinux.whereAmI.data.model.Zone
 import kotlinx.coroutines.Dispatchers
@@ -61,6 +63,21 @@ class WhereApi(
         val (status, json) = request("/api/where?lat=$lat&lon=$lon")
         if (status != 200) throw ApiException(json.optString("error", "שגיאה $status"), status)
         return parseWhere(json)
+    }
+
+    suspend fun street(query: String): List<StreetMatch> {
+        val (status, json) = request("/api/street?q=${java.net.URLEncoder.encode(query, "UTF-8")}")
+        if (status != 200) throw ApiException(json.optString("error", "שגיאה $status"), status)
+        return json.getJSONArray("matches").objects().map { m ->
+            val point = m.getJSONObject("point")
+            StreetMatch(
+                label = m.getString("label"),
+                city = m.str("city"),
+                neighborhoods = m.getJSONArray("neighborhoods").objects().map { StreetPlace(it.str("name"), it.getDouble("lat"), it.getDouble("lon")) },
+                lat = point.getDouble("lat"),
+                lon = point.getDouble("lon"),
+            )
+        }
     }
 
     suspend fun sessions(): List<ParkingSession> {

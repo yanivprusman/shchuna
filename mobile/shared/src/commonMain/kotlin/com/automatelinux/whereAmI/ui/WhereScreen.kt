@@ -37,6 +37,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
@@ -74,6 +84,7 @@ import androidx.compose.ui.unit.sp
 import com.automatelinux.whereAmI.data.model.Cello
 import com.automatelinux.whereAmI.data.model.Locality
 import com.automatelinux.whereAmI.data.model.ParkingSession
+import com.automatelinux.whereAmI.data.model.StreetMatch
 import com.automatelinux.whereAmI.data.model.Where
 import com.automatelinux.whereAmI.data.model.Zone
 import com.automatelinux.whereAmI.ui.theme.Palette
@@ -95,6 +106,12 @@ data class ScreenState(
     val parkingBusy: Boolean = false,
     val parkingMessage: String? = null,
     val confirmation: Confirmation? = null,
+    /** Street search. `results == null` means no search is showing. */
+    val query: String = "",
+    val searching: Boolean = false,
+    val results: List<StreetMatch>? = null,
+    /** The picked place being shown instead of where the phone is; null = live. */
+    val browsing: String? = null,
 )
 
 /** Cello showed a warning before parking; it needs the driver's yes. */
@@ -107,6 +124,9 @@ class Actions(
     val confirmParking: (Confirmation) -> Unit,
     val dismissConfirmation: () -> Unit,
     val stopParking: () -> Unit,
+    val search: (String) -> Unit,
+    val openPlace: (label: String, lat: Double, lon: Double) -> Unit,
+    val backToLive: () -> Unit,
 )
 
 private val CardShape = RoundedCornerShape(20.dp)
@@ -125,7 +145,9 @@ fun WhereScreen(state: ScreenState, actions: Actions) {
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 TopBar(state, actions)
+                SearchBar(state, actions)
                 when {
+                    state.results != null || state.searching -> SearchResults(state, actions)
                     state.needsPermission -> Notice(
                         "כדי לדעת איפה אתה, האפליקציה צריכה גישה למיקום.",
                         "אפשר גישה למיקום", "grant-location", actions.grantPermission,
@@ -137,9 +159,10 @@ fun WhereScreen(state: ScreenState, actions: Actions) {
                         AnimatedVisibility(state.error != null, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
                             Text(state.error.orEmpty(), color = Palette.Stop, fontSize = 13.sp)
                         }
-                        StreetSign(state.where)
-                        ParkingCard(state, actions)
+                        state.browsing?.let { BrowsingBanner(it, actions.backToLive) }
+                        MapHero(state.where, browsing = state.browsing != null)
                         FactsCard(state.where)
+                        ParkingCard(state, actions)
                         state.where.locality?.let { TownCard(it) }
                         Spacer(Modifier.height(8.dp))
                     }
@@ -209,43 +232,177 @@ private fun LiveDot(active: Boolean) {
     }
 }
 
-// ── The street sign: where you are ────────────────────────────────────────
+// ── The map hero: which neighbourhood ─────────────────────────────────────
 
 /**
- * The headline, drawn as an Israeli street-name plate: blue, a white inset rule,
- * white lettering — the neighbourhood big, the street and city beneath — standing
- * on a blue-and-white paid-parking kerb.
+ * The headline, on a piece of drawn map: teal ink, faint streets, and one district
+ * lit amber behind the name — the icon's idea at full size. The neighbourhood is
+ * the biggest thing on the screen because it is the question the app answers.
  */
 @Composable
-private fun StreetSign(where: Where) {
+private fun MapHero(where: Where, browsing: Boolean) {
     val a = where.address
-    Column {
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(18.dp))
-                .background(Brush.linearGradient(listOf(Palette.Sign, Palette.SignDeep), start = Offset(0f, 0f), end = Offset(900f, 700f)))
-                .padding(7.dp)
-                .border(2.dp, Color.White.copy(alpha = 0.9f), RoundedCornerShape(13.dp))
-                .padding(horizontal = 18.dp, vertical = 16.dp),
-        ) {
-            AnimatedContent(
-                targetState = Triple(a.neighborhood, listOfNotNull(a.street, a.houseNumber).joinToString(" "), a.city),
-                transitionSpec = { fadeIn(tween(350)) togetherWith fadeOut(tween(200)) },
-            ) { (hood, streetLine, city) ->
-                Column {
-                    Text("אתה נמצא ב", color = Color.White.copy(alpha = 0.75f), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(22.dp))
+            .background(Brush.linearGradient(listOf(Palette.Brand, Palette.BrandDeep), start = Offset(0f, 0f), end = Offset(900f, 800f))),
+    ) {
+        MapPattern(Modifier.matchParentSize())
+        AnimatedContent(
+            targetState = Triple(a.neighborhood, listOfNotNull(a.street, a.houseNumber).joinToString(" "), a.city),
+            transitionSpec = { fadeIn(tween(350)) togetherWith fadeOut(tween(200)) },
+            modifier = Modifier.padding(horizontal = 22.dp, vertical = 22.dp),
+        ) { (hood, streetLine, city) ->
+            Column {
+                Text(
+                    if (browsing) "המקום נמצא בשכונה" else "אתה נמצא בשכונה",
+                    color = Palette.Highlight, fontSize = 13.sp, fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    hood ?: "אין כאן שכונה ממופה",
+                    color = Color.White, fontSize = if (hood != null) 36.sp else 24.sp, lineHeight = 40.sp, fontWeight = FontWeight.Black,
+                )
+                Spacer(Modifier.height(10.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(10.dp).clip(CircleShape).background(Palette.Highlight))
+                    Spacer(Modifier.width(8.dp))
                     Text(
-                        hood ?: city ?: "מקום לא מזוהה",
-                        color = Color.White, fontSize = 34.sp, lineHeight = 38.sp, fontWeight = FontWeight.Black,
+                        listOfNotNull(streetLine.ifBlank { null }, city).joinToString(" · "),
+                        color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Medium,
                     )
-                    Spacer(Modifier.height(6.dp))
-                    if (streetLine.isNotBlank()) Text(streetLine, color = Color.White, fontSize = 19.sp, fontWeight = FontWeight.Medium)
-                    if (city != null && hood != null) Text(city, color = Color.White.copy(alpha = 0.85f), fontSize = 16.sp)
+                }
+                a.quarter?.let { Text("ברובע $it", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp, modifier = Modifier.padding(top = 4.dp)) }
+            }
+        }
+    }
+}
+
+/** Faint streets and one amber district, drawn behind the hero's text. */
+@Composable
+private fun MapPattern(modifier: Modifier) {
+    Canvas(modifier) {
+        val w = size.width
+        val h = size.height
+        val district = Path().apply {
+            moveTo(w * 0.00f, h * 0.30f); lineTo(w * 0.34f, h * 0.18f); lineTo(w * 0.40f, h * 0.78f); lineTo(w * 0.00f, h * 0.92f); close()
+        }
+        drawPath(district, Palette.Highlight.copy(alpha = 0.16f))
+        val streets = Path().apply {
+            moveTo(-10f, h * 0.30f); lineTo(w * 0.34f, h * 0.18f); lineTo(w + 10f, h * 0.36f)
+            moveTo(w * 0.30f, -10f); lineTo(w * 0.34f, h * 0.18f); lineTo(w * 0.40f, h * 0.78f); lineTo(w * 0.44f, h + 10f)
+            moveTo(-10f, h * 0.92f); lineTo(w * 0.40f, h * 0.78f); lineTo(w + 10f, h * 0.88f)
+            moveTo(w * 0.72f, -10f); lineTo(w * 0.70f, h + 10f)
+        }
+        drawPath(streets, Color.White.copy(alpha = 0.10f), style = Stroke(width = 5.dp.toPx(), join = StrokeJoin.Round))
+        drawPath(district, Palette.Highlight.copy(alpha = 0.45f), style = Stroke(width = 1.5.dp.toPx(), join = StrokeJoin.Round))
+    }
+}
+
+@Composable
+private fun BrowsingBanner(label: String, onBack: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Palette.BrandSoft).padding(start = 14.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text("מציג: $label", color = Palette.BrandDeep, fontSize = 14.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Row(
+            Modifier.clip(RoundedCornerShape(10.dp)).background(Palette.Brand).clickable(onClick = onBack).padding(horizontal = 12.dp, vertical = 8.dp).testTag("back-to-live"),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Filled.MyLocation, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(6.dp))
+            Text("המיקום שלי", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+// ── Search: which neighbourhood is a street in ────────────────────────────
+
+@Composable
+private fun SearchBar(state: ScreenState, actions: Actions) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(52.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Palette.Card)
+            .border(1.5.dp, if (state.query.isNotEmpty()) Palette.Brand else Palette.Hairline, RoundedCornerShape(16.dp))
+            .padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(Icons.Filled.Search, contentDescription = null, tint = Palette.Muted, modifier = Modifier.size(22.dp))
+        Spacer(Modifier.width(10.dp))
+        Box(Modifier.weight(1f)) {
+            if (state.query.isEmpty()) Text("באיזו שכונה נמצא רחוב…", color = Palette.Muted, fontSize = 16.sp)
+            BasicTextField(
+                value = state.query,
+                onValueChange = actions.search,
+                singleLine = true,
+                textStyle = TextStyle(color = Palette.Ink, fontSize = 16.sp, fontFamily = androidx.compose.material3.MaterialTheme.typography.bodyLarge.fontFamily),
+                cursorBrush = SolidColor(Palette.Brand),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                modifier = Modifier.fillMaxWidth().testTag("street-search"),
+            )
+        }
+        if (state.searching) CircularProgressIndicator(Modifier.size(18.dp), color = Palette.Brand, strokeWidth = 2.dp)
+        else if (state.query.isNotEmpty()) {
+            Icon(
+                Icons.Filled.Close, contentDescription = "נקה", tint = Palette.Muted,
+                modifier = Modifier.size(22.dp).clip(CircleShape).clickable { actions.search("") }.testTag("clear-search"),
+            )
+        }
+    }
+}
+
+@Composable
+private fun SearchResults(state: ScreenState, actions: Actions) {
+    val results = state.results
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        if (results == null) return@Column
+        if (results.isEmpty()) {
+            Text("לא נמצא רחוב כזה. נסה להוסיף את שם העיר.", color = Palette.Muted, fontSize = 15.sp, modifier = Modifier.padding(8.dp))
+        }
+        results.forEach { m ->
+            Column(
+                Modifier.fillMaxWidth().clip(CardShape).background(Palette.Card).border(1.dp, Palette.Hairline, CardShape).padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(m.label, fontSize = 18.sp, color = Palette.Ink, fontWeight = FontWeight.Bold)
+                val named = m.neighborhoods.filter { it.name != null }
+                if (named.isEmpty()) {
+                    Text("אין שכונה ממופה לרחוב הזה", fontSize = 13.sp, color = Palette.Muted)
+                    PlaceChip("פתח", "open-street") { actions.openPlace(m.label, m.lat, m.lon) }
+                } else {
+                    Text(if (named.size == 1) "בשכונה" else "עובר ב-${named.size} שכונות", fontSize = 13.sp, color = Palette.Muted)
+                    FlowChips(named.map { it.name!! to { actions.openPlace("${m.label} · ${it.name}", it.lat, it.lon) } })
                 }
             }
         }
-        Kerb(Modifier.fillMaxWidth().padding(horizontal = 10.dp).height(10.dp))
+    }
+}
+
+@Composable
+private fun FlowChips(items: List<Pair<String, () -> Unit>>) {
+    // A simple wrapping row: chips are short, two or three fit a line.
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        items.chunked(2).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                row.forEach { (label, onClick) -> PlaceChip(label, "neighborhood-$label", onClick) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlaceChip(label: String, tag: String, onClick: () -> Unit) {
+    Row(
+        Modifier.clip(RoundedCornerShape(12.dp)).background(Palette.BrandSoft).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 9.dp).testTag(tag),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(8.dp).clip(CircleShape).background(Palette.Highlight))
+        Spacer(Modifier.width(7.dp))
+        Text(label, color = Palette.BrandDeep, fontSize = 15.sp, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -303,15 +460,15 @@ private fun ParkingCard(state: ScreenState, actions: Actions) {
                 }
             }
 
-            if (active != null) {
+            if (active != null && state.browsing == null) {
                 ActiveSession(active, state.parkingBusy, actions.stopParking)
             } else {
                 when (cello) {
                     is Cello.NoCity -> Text(cello.message, fontSize = 17.sp, color = Palette.Ink)
-                    is Cello.One -> RecommendedZone(cello.zone, state.parkingBusy) { actions.startParking(cello.zone.id) }
+                    is Cello.One -> RecommendedZone(cello.zone, state.parkingBusy, canStart = state.browsing == null) { actions.startParking(cello.zone.id) }
                     is Cello.Several -> {
                         Text(cello.message, fontSize = 14.sp, color = Palette.Ink)
-                        cello.candidates.forEach { z -> ZoneRow(z, state.parkingBusy) { actions.startParking(z.id) } }
+                        cello.candidates.forEach { z -> ZoneRow(z, state.parkingBusy || state.browsing != null) { actions.startParking(z.id) } }
                     }
                     is Cello.None -> Text(cello.message, fontSize = 14.sp, color = Palette.Ink)
                 }
@@ -327,7 +484,7 @@ private fun ParkingCard(state: ScreenState, actions: Actions) {
                 is Cello.None -> cello.others
                 is Cello.NoCity -> emptyList()
             }
-            if (others.isNotEmpty() && active == null) {
+            if (others.isNotEmpty() && (active == null || state.browsing != null)) {
                 val open = showAll || cello is Cello.None
                 Text(
                     if (open) "הסתר את שאר האזורים" else "שאר האזורים בעיר · ${others.size}",
@@ -336,7 +493,7 @@ private fun ParkingCard(state: ScreenState, actions: Actions) {
                 )
                 AnimatedVisibility(open, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        others.forEach { z -> ZoneRow(z, state.parkingBusy) { actions.startParking(z.id) } }
+                        others.forEach { z -> ZoneRow(z, state.parkingBusy || state.browsing != null) { actions.startParking(z.id) } }
                     }
                 }
             }
@@ -353,7 +510,7 @@ private fun ParkingGlyph() {
 }
 
 @Composable
-private fun RecommendedZone(zone: Zone, busy: Boolean, onStart: () -> Unit) {
+private fun RecommendedZone(zone: Zone, busy: Boolean, canStart: Boolean, onStart: () -> Unit) {
     var asking by remember { mutableStateOf(false) }
     Column(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Palette.SignSoft).padding(16.dp),
@@ -367,7 +524,8 @@ private fun RecommendedZone(zone: Zone, busy: Boolean, onStart: () -> Unit) {
             }
         }
         Spacer(Modifier.height(10.dp))
-        PrimaryButton("התחל חניה כאן", Palette.Sign, enabled = !busy, busy = busy, tag = "start-parking-${zone.id}") { asking = true }
+        if (canStart) PrimaryButton("התחל חניה כאן", Palette.Sign, enabled = !busy, busy = busy, tag = "start-parking-${zone.id}") { asking = true }
+        else Text("אפשר להתחיל חניה רק כשאתה במקום — חזור למיקום שלך", fontSize = 13.sp, color = Palette.Muted)
     }
     if (asking) StartDialog(zone, onDismiss = { asking = false }) { asking = false; onStart() }
 }
@@ -491,7 +649,7 @@ private fun FactsCard(where: Where) {
 }
 
 private val AgeColors = listOf(
-    Color(0xFFBFD3F5), Color(0xFF8DB0EC), Color(0xFF2463C9), Color(0xFF1A4BA0), Color(0xFF123677), Color(0xFF0A2152),
+    Color(0xFFF6D58E), Color(0xFFF2B544), Color(0xFF7FB3AA), Color(0xFF3E8A85), Color(0xFF1E6B6B), Color(0xFF0E3A40),
 )
 
 @Composable
@@ -541,7 +699,7 @@ private fun Notice(text: String, button: String, tag: String, onClick: () -> Uni
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Text(text, fontSize = 17.sp, color = Palette.Ink)
-        PrimaryButton(button, Palette.Sign, enabled = true, busy = false, tag = tag, onClick = onClick)
+        PrimaryButton(button, Palette.Brand, enabled = true, busy = false, tag = tag, onClick = onClick)
     }
 }
 
@@ -550,7 +708,7 @@ private fun Locating() {
     Column(Modifier.fillMaxWidth().padding(top = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             Modifier.fillMaxWidth().height(170.dp).clip(RoundedCornerShape(18.dp))
-                .background(Brush.linearGradient(listOf(Palette.Sign, Palette.SignDeep))),
+                .background(Brush.linearGradient(listOf(Palette.Brand, Palette.BrandDeep))),
             contentAlignment = Alignment.Center,
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -559,7 +717,6 @@ private fun Locating() {
                 Text("מאתר את המיקום שלך…", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Medium)
             }
         }
-        Kerb(Modifier.fillMaxWidth().padding(horizontal = 10.dp).height(10.dp), moving = true)
     }
 }
 
