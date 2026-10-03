@@ -1,0 +1,7 @@
+{
+  "description": "איפה אני — where you are standing right now: city, neighborhood, street and area details, plus exactly what to pick in the Cello parking app",
+  "icon": "MapPin",
+  "sharedLibs": [
+    "android-feedback-lib"
+  ]
+}
