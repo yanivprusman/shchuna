@@ -1,8 +1,13 @@
 # whereAmI — איפה אני
 
-Where you are standing: neighbourhood, street, city, נפה/מחוז, the town's
-population-registry numbers, and **which zone to pick in Cello** — with
-start/stop parking from the app and by voice through Ben.
+**A neighbourhood app first.** Which neighbourhood you are in (the headline), or —
+type a street — which neighbourhoods that street runs through; plus street, city,
+נפה/מחוז and the town's population-registry numbers. Parking is the second
+feature: which Cello zone to pick, start/stop from the app or by voice via Ben.
+
+The look follows that order on purpose: map teal/paper/amber everywhere, and the
+blue-and-white kerb ONLY inside the parking card. An earlier build was blue-white
+throughout and read as a parking app — the owner called it out (2026-10-03).
 
 ```
 phone app (mobile/, Compose)  ──bearer──▶  Next.js API :3171 (desktop, 10.7.0.2, over WireGuard)
