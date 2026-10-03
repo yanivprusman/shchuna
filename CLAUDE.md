@@ -1,4 +1,4 @@
-# whereAmI — איפה אני
+# whereAmI — שכונה (launcher name)
 
 **A neighbourhood app first.** Which neighbourhood you are in (the headline), or —
 type a street — which neighbourhoods that street runs through; plus street, city,

@@ -3,8 +3,8 @@ import "./globals.css";
 import FeedbackChatMount from "./FeedbackChatMount";
 
 export const metadata: Metadata = {
-  title: "whereAmI",
-  description: "איפה אני — where you are standing right now: city, neighborhood, street and area details, plus exactly what to pick in the Cello parking app",
+  title: "שכונה",
+  description: "שכונה — which neighbourhood you are in, or which neighbourhoods a street runs through; plus the town's registry data and which Cello parking zone to pick",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
