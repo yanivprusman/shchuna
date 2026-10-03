@@ -335,7 +335,8 @@ private fun TownCard(locality: Locality) {
         val max = locality.ages.maxOfOrNull { it.count }?.coerceAtLeast(1) ?: 1
         locality.ages.forEach { band ->
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 2.dp)) {
-                Text(band.label, fontSize = 13.sp, color = Muted, modifier = Modifier.width(52.dp))
+                // LTR isolate: in an RTL row "0–5" would otherwise render as "5–0".
+                Text("\u2066${band.label}\u2069", fontSize = 13.sp, color = Muted, modifier = Modifier.width(52.dp))
                 Box(Modifier.weight(1f)) {
                     Box(
                         Modifier
