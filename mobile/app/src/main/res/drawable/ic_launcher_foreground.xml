@@ -1,5 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  A location pin painted like an Israeli paid-parking kerb (כחול-לבן): the app
+  answers "where am I" and "what do I pick in Cello" in one mark. Scaled to sit
+  inside the 66dp safe circle of the 108dp adaptive canvas.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#FFFFFF" android:pathData="M38,38 h32 a6,6 0 0 1 6,6 v20 a6,6 0 0 1 -6,6 h-32 a6,6 0 0 1 -6,-6 v-20 a6,6 0 0 1 6,-6 z" />
-    <path android:fillColor="#B2DFDB" android:pathData="M46,48 h16 v4 h-16 z M46,56 h16 v4 h-16 z" />
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <group android:scaleX="0.86" android:scaleY="0.86" android:pivotX="54" android:pivotY="53">
+        <!-- shadow -->
+        <path android:fillColor="#47000000"
+            android:pathData="M54,89C54,89 30,62 30,47.5A24,24 0,0 1,78 47.5C78,62 54,89 54,89Z" />
+        <group>
+            <clip-path android:pathData="M54,86C54,86 30,59 30,44.5A24,24 0,0 1,78 44.5C78,59 54,86 54,86Z" />
+            <path android:fillColor="#FFFFFFFF" android:pathData="M20,15h70v75h-70z" />
+            <group android:rotation="-35" android:pivotX="54" android:pivotY="50">
+                <path android:fillColor="#FF2463C9" android:pathData="M-10,14h128v11h-128z" />
+                <path android:fillColor="#FF2463C9" android:pathData="M-10,36h128v11h-128z" />
+                <path android:fillColor="#FF2463C9" android:pathData="M-10,58h128v11h-128z" />
+                <path android:fillColor="#FF2463C9" android:pathData="M-10,80h128v11h-128z" />
+            </group>
+        </group>
+        <path android:fillColor="#FF0A2152"
+            android:pathData="M54,44.5m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0" />
+        <path android:fillColor="#FFFFFFFF"
+            android:pathData="M54,44.5m-5.5,0a5.5,5.5 0,1 1,11 0a5.5,5.5 0,1 1,-11 0" />
+    </group>
 </vector>

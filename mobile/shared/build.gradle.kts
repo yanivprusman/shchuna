@@ -27,6 +27,7 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.materialIconsExtended)
+            implementation(compose.components.resources)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
             implementation(libs.multiplatform.settings)
@@ -44,4 +45,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+}
+
+// Bundled typeface (Rubik, OFL) lives in commonMain/composeResources/font.
+compose.resources {
+    publicResClass = false
+    packageOfResClass = "com.automatelinux.whereAmI.resources"
 }
