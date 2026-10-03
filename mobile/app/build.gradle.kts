@@ -19,7 +19,12 @@ val gitShortHash = providers.exec {
 val envFile = rootProject.file(".env")
 val envProps = Properties()
 if (envFile.exists()) envFile.inputStream().use { envProps.load(it) }
-val apiBaseUrl = envProps.getProperty("API_BASE_URL", "http://10.7.0.1:3171/")
+// The phone reaches the desktop backend directly over WireGuard, never through nginx.
+val apiBaseUrl = envProps.getProperty("API_BASE_URL", "http://10.7.0.2:3171/")
+// Bearer token for the backend (WHEREAMI_API_TOKEN in /etc/automatelinux/whereami.env).
+// Parking spends money, so a build without it must not ship: fail the build instead.
+val apiToken = envProps.getProperty("API_TOKEN")
+    ?: throw GradleException("mobile/.env has no API_TOKEN — copy WHEREAMI_API_TOKEN from /etc/automatelinux/whereami.env")
 
 android {
     namespace = "com.automatelinux.whereAmI"
@@ -32,6 +37,7 @@ android {
         versionCode = gitCommitCount
         versionName = "v${gitCommitCount} (${gitShortHash})"
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("String", "API_TOKEN", "\"$apiToken\"")
     }
 
     buildTypes {

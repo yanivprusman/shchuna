@@ -1,24 +1,16 @@
 package com.automatelinux.whereAmI
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import com.automatelinux.whereAmI.ui.Actions
+import com.automatelinux.whereAmI.ui.ScreenState
+import com.automatelinux.whereAmI.ui.WhereScreen
 import com.automatelinux.whereAmI.ui.theme.AppTheme
 
 // Shared entry composable — rendered by MainActivity on Android and (on a Mac)
-// by ComposeUIViewController on iOS. Put your real UI in commonMain.
+// by ComposeUIViewController on iOS. The platform supplies state and actions.
 @Composable
-fun App() {
+fun App(state: ScreenState, actions: Actions) {
     AppTheme {
-        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("WhereAmI", style = MaterialTheme.typography.headlineMedium)
-            }
-        }
+        WhereScreen(state, actions)
     }
 }
