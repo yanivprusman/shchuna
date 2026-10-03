@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { config } from "./config";
+import { describe } from "./errors";
 
 /**
  * Every shchuna route needs the bearer token. The parking routes spend real
@@ -23,7 +24,7 @@ export function readLatLon(lat: unknown, lon: unknown): { lat: number; lon: numb
 }
 
 export function failure(error: unknown): Response {
-  const message = error instanceof Error ? error.message : String(error);
+  const message = describe(error);
   const status = (error as { status?: number }).status;
   return Response.json({ error: message }, { status: status && status >= 400 && status < 600 ? status : 502 });
 }

@@ -5,6 +5,7 @@ import { cities } from "./cello";
 import { locality, type Locality } from "./gov";
 import { spotFacts } from "./spot";
 import { chooseZone, type ZoneAnswer } from "./zones";
+import { describe } from "./errors";
 
 export type ZoneView = { id: number; name: string; reason?: string };
 
@@ -38,9 +39,14 @@ export function celloView(answer: ZoneAnswer): CelloView {
 
 export async function where(lat: number, lon: number) {
   const facts = await spotFacts(lat, lon);
+  // The town's registry numbers are extra information: if data.gov.il is down the
+  // answer still comes back, without them, and says why.
+  let localityError: string | null = null;
   const [catalogue, gov] = await Promise.all([
     cities(),
-    facts.address.city ? locality(facts.address.city) : Promise.resolve<Locality | null>(null),
+    facts.address.city
+      ? locality(facts.address.city).catch((e: unknown) => { localityError = describe(e); return null; })
+      : Promise.resolve<Locality | null>(null),
   ]);
   const answer = chooseZone(catalogue, facts.spot);
   return {
@@ -51,6 +57,8 @@ export async function where(lat: number, lon: number) {
     industrial: facts.areas.industrial,
     parkingArea: facts.parkingArea,
     locality: gov,
+    localityError,
+    parkingAreaError: facts.parkingAreaError,
     cello: celloView(answer),
     answer,
   };

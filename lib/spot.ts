@@ -4,6 +4,7 @@
 
 import { reverseGeocodeDetailed, type AddressBreakdown } from "@automatelinux/geo";
 import { norm, type Spot } from "./zones";
+import { describe } from "./errors";
 
 const USER_AGENT = "automateLinux-shchuna/0.1 (yanivprusman@gmail.com)";
 
@@ -84,12 +85,23 @@ function industrialFrom(areas: OsmAreas, neighborhoods: string[]): boolean | nul
   return areas.industrial;
 }
 
-export type SpotFacts = { address: AddressBreakdown; areas: OsmAreas; parkingArea: number | null; spot: Spot };
+export type SpotFacts = { address: AddressBreakdown; areas: OsmAreas; parkingArea: number | null; parkingAreaError: string | null; spot: Spot };
 
 export async function spotFacts(lat: number, lon: number): Promise<SpotFacts> {
   const [address, areas] = await Promise.all([reverseGeocodeDetailed(lat, lon), osmAreas(lat, lon)]);
   const isTelAviv = address.city != null && norm(address.city).startsWith("תל אביב");
-  const parkingArea = isTelAviv ? await telAvivParkingArea(lat, lon) : null;
+  // Tel Aviv's GIS only sharpens the zone; when it is down the zone choice says it
+  // could not tell (no area number ⇒ no area-numbered zone matches) instead of the
+  // whole answer failing.
+  let parkingArea: number | null = null;
+  let parkingAreaError: string | null = null;
+  if (isTelAviv) {
+    try {
+      parkingArea = await telAvivParkingArea(lat, lon);
+    } catch (e) {
+      parkingAreaError = describe(e);
+    }
+  }
 
   const neighborhoods = [address.neighborhood, address.quarter, ...areas.neighborhoods].filter(
     (n, i, all): n is string => !!n && all.findIndex((m) => m && norm(m) === norm(n)) === i,
@@ -98,6 +110,7 @@ export async function spotFacts(lat: number, lon: number): Promise<SpotFacts> {
     address,
     areas,
     parkingArea,
+    parkingAreaError,
     spot: { city: address.city, street: address.street, neighborhoods, parkingArea, industrial: industrialFrom(areas, neighborhoods) },
   };
 }
