@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Ben's handle on parking — what "hey computer, start parking" ends up running.
 //
+//   node scripts/parking.mjs location         where the phone is — for anything, not just parking
 //   node scripts/parking.mjs where            where the phone is + which Cello zone
 //   node scripts/parking.mjs start [--zone <id>] [--confirm <code>]
 //   node scripts/parking.mjs stop
@@ -10,6 +11,9 @@
 // no app for this; Waze or Maps keep the fix fresh while driving, so it is
 // seconds old when you park). A fix older than MAX_FIX_AGE_S is refused —
 // parking in the zone you were in ten minutes ago is how you get a ticket.
+// `location` is the exception: "find me somewhere open nearby" is still
+// answerable from a twenty-minute-old fix, so it reports the age instead of
+// refusing and leaves the judgement to whoever asked.
 //
 // Output is one JSON object on stdout: { ok, say, ...details }. `say` is a
 // sentence for the driver; the rest is for whoever needs to act on it.
@@ -18,6 +22,7 @@
 
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { parseFixes, bestFix } from "./phoneFix.mjs";
 
 const PHONE = "10.7.0.3:5555";
 const API = "http://127.0.0.1:3171";
@@ -29,14 +34,6 @@ function token() {
   return line.slice("SHCHUNA_API_TOKEN=".length).trim();
 }
 
-/** "+3d5h8m5s607ms" → seconds. */
-function elapsed(et) {
-  const m = et.match(/^\+?(?:(\d+)d)?(?:(\d+)h)?(?:(\d+)m(?!s))?(?:(\d+)s)?(?:(\d+)ms)?$/);
-  if (!m) throw new Error(`cannot read fix time ${et}`);
-  const [, d = 0, h = 0, min = 0, s = 0, ms = 0] = m.map((x) => (x === undefined ? 0 : Number(x)));
-  return d * 86400 + h * 3600 + min * 60 + s + ms / 1000;
-}
-
 function phoneFix() {
   const adb = (cmd) => execFileSync("adb", ["-s", PHONE, "shell", cmd], { encoding: "utf8", timeout: 20_000 });
   let dump;
@@ -46,17 +43,9 @@ function phoneFix() {
     throw new Error(`cannot reach the phone over adb (${PHONE}): ${String(e.message).split("\n")[0]}`);
   }
   const uptime = Number(adb("cat /proc/uptime").split(" ")[0]);
-  const fixes = [...dump.matchAll(/last location=Location\[(\w+) (-?[\d.]+),(-?[\d.]+) hAcc=([\d.]+) et=(\S+)/g)].map((m) => ({
-    provider: m[1],
-    lat: Number(m[2]),
-    lon: Number(m[3]),
-    accuracyM: Math.round(Number(m[4])),
-    ageS: Math.round(uptime - elapsed(m[5])),
-  }));
+  const fixes = parseFixes(dump, uptime);
   if (fixes.length === 0) throw new Error("the phone reports no location fix at all");
-  // Newest first; of two equally fresh, the more accurate.
-  fixes.sort((a, b) => a.ageS - b.ageS || a.accuracyM - b.accuracyM);
-  return fixes[0];
+  return bestFix(fixes);
 }
 
 async function api(path, init) {
@@ -72,6 +61,13 @@ async function api(path, init) {
 function out(code, obj) {
   process.stdout.write(JSON.stringify(obj, null, 1) + "\n");
   process.exit(code);
+}
+
+/** How old a fix is, the way you would say it. */
+function ageText(seconds) {
+  if (seconds < 90) return `${Math.max(seconds, 0)} seconds`;
+  if (seconds < 2 * 3600) return `${Math.round(seconds / 60)} minutes`;
+  return `${Math.round(seconds / 3600)} hours`;
 }
 
 function zoneList(zones) {
@@ -100,11 +96,24 @@ async function main() {
     out(0, { ok: true, say: `Parking stopped${body.session?.zoneName ? ` in ${body.session.zoneName}` : ""}.`, ...body });
   }
 
-  if (command !== "where" && command !== "start") {
-    out(1, { ok: false, say: "usage: parking.mjs where | start [--zone <id>] [--confirm <code>] | stop | status" });
+  if (command !== "location" && command !== "where" && command !== "start") {
+    out(1, { ok: false, say: "usage: parking.mjs location | where | start [--zone <id>] [--confirm <code>] | stop | status" });
   }
 
   const fix = phoneFix();
+
+  if (command === "location") {
+    const { status, body } = await api(`/api/where?lat=${fix.lat}&lon=${fix.lon}`);
+    if (status !== 200) out(1, { ok: false, say: body.error, fix });
+    const a = body.address;
+    const placeLine = [[a.street, a.houseNumber].filter(Boolean).join(" "), a.neighborhood, a.city].filter(Boolean).join(", ");
+    out(0, {
+      ok: true,
+      say: `You are at ${placeLine}. That fix is ${ageText(fix.ageS)} old, good to ${fix.accuracyM} metres.`,
+      fix,
+      address: a,
+    });
+  }
   if (fix.ageS > MAX_FIX_AGE_S) {
     out(1, {
       ok: false,
