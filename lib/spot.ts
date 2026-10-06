@@ -2,11 +2,9 @@
 // @automatelinux/geo), the OSM areas the point is inside (industrial land,
 // neighbourhood polygons), and — in Tel Aviv — the municipal parking-area number.
 
-import { reverseGeocodeDetailed, type AddressBreakdown } from "@automatelinux/geo";
+import { overpass, reverseGeocodeDetailed, type AddressBreakdown } from "@automatelinux/geo";
 import { norm, type Spot } from "./zones";
 import { describe } from "./errors";
-
-const USER_AGENT = "automateLinux-shchuna/0.1 (yanivprusman@gmail.com)";
 
 export type OsmAreas = {
   /** null when Overpass could not be asked — said so to the user, never read as "no". */
@@ -29,22 +27,12 @@ export async function osmAreas(lat: number, lon: number): Promise<OsmAreas> {
   if (hit && Date.now() - hit.at < AREA_TTL_MS) return hit.value;
 
   const query = `[out:json][timeout:15];is_in(${lat},${lon})->.a;area.a;out tags;`;
-  const ask = () =>
-    fetch("https://overpass-api.de/api/interpreter", {
-      method: "POST",
-      headers: { "User-Agent": USER_AGENT, "Content-Type": "application/x-www-form-urlencoded" },
-      body: `data=${encodeURIComponent(query)}`,
-      signal: AbortSignal.timeout(20_000),
-    });
-  // The public Overpass instance sheds load with 429/504 for a few seconds at a
-  // time; one retry after a pause gets through most of those.
-  let response = await ask();
-  if (response.status === 429 || response.status === 504) {
-    await new Promise((r) => setTimeout(r, 3000));
-    response = await ask();
+  let body: { elements: { tags?: Record<string, string> }[] };
+  try {
+    body = await overpass(query);
+  } catch (e) {
+    return { industrial: null, neighborhoods: [], landmarks: [], unavailable: describe(e) };
   }
-  if (!response.ok) return { industrial: null, neighborhoods: [], landmarks: [], unavailable: `Overpass answered ${response.status}` };
-  const body = (await response.json()) as { elements: { tags?: Record<string, string> }[] };
 
   const value: OsmAreas = { industrial: false, neighborhoods: [], landmarks: [] };
   for (const { tags } of body.elements) {
